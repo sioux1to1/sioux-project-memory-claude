@@ -20,6 +20,18 @@ except ImportError:
     sys.exit(1)
 
 
+def is_git_repo():
+    """Verifica se o diretório atual é um repositório git"""
+    try:
+        subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            capture_output=True, check=True
+        )
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
 def get_config():
     """Carrega configuração do arquivo config.json"""
     config_path = Path(__file__).parent.parent / "config.json"
@@ -321,6 +333,11 @@ def main():
     update_parser.add_argument("--content", default=None)
 
     args = parser.parse_args()
+
+    # Verificar se está em um repositório git
+    if not is_git_repo():
+        print(json.dumps({"status": "skipped", "reason": "not a git repository"}))
+        sys.exit(0)
 
     try:
         if args.command == "add":
